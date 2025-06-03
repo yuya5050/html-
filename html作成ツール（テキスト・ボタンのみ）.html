@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ビジュアルHTMLエディタ</title>
+  <style>
+    #canvas {
+      width: 100%;
+      height: 400px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      overflow: auto;
+    }
+
+    .box {
+      border: 1px solid #999;
+      background-color: #f9f9f9;
+      padding: 10px;
+      margin: 10px 0;
+    }
+
+    .button-box {
+      background-color: #e0f7fa;
+    }
+
+    .text-box {
+      background-color: #fff3e0;
+    }
+
+    .children-container {
+      margin-top: 10px;
+      padding-left: 20px;
+      border-left: 2px solid #ccc;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      margin-top: 5px;
+    }
+
+    button {
+      margin-right: 10px;
+    }
+
+    #output {
+      white-space: pre-wrap;
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      padding: 10px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>ビジュアルHTMLエディタ</h1>
+
+  <div>
+    <button onclick="addElement('button')">ボタンを追加</button>
+    <button onclick="addElement('text')">テキストを追加</button>
+    <button onclick="generateHtml()">HTMLコードを生成</button>
+  </div>
+
+  <div id="canvas"></div>
+
+  <h2>生成されたHTMLコード:</h2>
+  <pre id="output">(ここにHTMLコードが表示されます)</pre>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+
+    function addElement(type, parent = canvas) {
+      const box = document.createElement("div");
+      box.classList.add("box");
+
+      if (type === "button") {
+        box.classList.add("button-box");
+
+        // ラベルとinput
+        const label = document.createElement("label");
+        label.textContent = "ボタンのテキスト：";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = "例: クリックしてね";
+
+        label.appendChild(input);
+        box.appendChild(label);
+
+        // 子要素用コンテナ
+        const childrenContainer = document.createElement("div");
+        childrenContainer.classList.add("children-container");
+        box.appendChild(childrenContainer);
+
+        // 「この中にテキスト追加」ボタン
+        const addTextBtn = document.createElement("button");
+        addTextBtn.textContent = "この中にテキスト追加";
+        addTextBtn.addEventListener("click", () => addElement("text", childrenContainer));
+        box.appendChild(addTextBtn);
+
+        // 「この中にボタン追加」ボタン
+        const addButtonBtn = document.createElement("button");
+        addButtonBtn.textContent = "この中にボタン追加";
+        addButtonBtn.addEventListener("click", () => addElement("button", childrenContainer));
+        box.appendChild(addButtonBtn);
+      } else if (type === "text") {
+        box.classList.add("text-box");
+
+        const label = document.createElement("label");
+        label.textContent = "テキスト内容：";
+
+        const textarea = document.createElement("textarea");
+        textarea.rows = 2;
+        textarea.placeholder = "テキストを入力";
+
+        label.appendChild(textarea);
+        box.appendChild(label);
+      }
+
+      parent.appendChild(box);
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, (s) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      }[s]));
+    }
+
+function generateHtmlFromElement(element, depth = 0) {
+  const indent = "  ".repeat(depth);
+
+  if (element.classList.contains("button-box")) {
+    const label = element.querySelector("input")?.value || "ラベル";
+    const children = element.querySelector(".children-container");
+    const innerHtml = Array.from(children.children)
+      .map((child) => generateHtmlFromElement(child, depth + 1))
+      .join("\n");
+
+    return (
+      `${indent}<div>\n` +
+      `${indent}  <span>${escapeHtml(label)}</span>\n` +
+      `${indent}  <button onclick="toggleChildren(this)">表示</button>\n` +
+      `${indent}  <div class="children" style="display:none;">\n${innerHtml}\n${indent}  </div>\n` +
+      `${indent}</div>`
+    );
+  }
+
+  if (element.classList.contains("text-box")) {
+    const text = element.querySelector("textarea")?.value || "";
+    return `${indent}<span>${escapeHtml(text)}</span>`;
+  }
+
+  return "";
+}
+
+
+function generateHtml() {
+  const bodyHtml = Array.from(canvas.children)
+    .map((child) => generateHtmlFromElement(child))
+    .join("\n");
+const fullHtml = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>ユーザー作成HTML</title>
+  <style>
+    .children {
+      display: none;
+        background: #f1f5f9;
+        border-radius: 10px;
+        margin: 16px 0 24px 0;
+        padding: 18px 22px;
+        box-shadow: 0 2px 8px rgba(99,102,241,0.04);
+        animation: fadeIn 0.5s;
+    }
+  </style>
+</head>
+<body>
+
+${bodyHtml}
+
+<script>
+  function toggleChildren(button) {
+    const children = button.nextElementSibling;
+    if (children.style.display === 'none') {
+      children.style.display = 'block';
+      button.textContent = '非表示';
+    } else {
+      children.style.display = 'none';
+      button.textContent = '表示';
+    }
+  }
+
+</scr` + `ipt>
+
+</body>
+</html>`;
+
+
+  document.getElementById("output").textContent = fullHtml;
+}
+
+  </script>
+</body>
+</html>
