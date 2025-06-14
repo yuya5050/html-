@@ -152,7 +152,7 @@ function generateHtmlFromElement(element, depth = 0) {
 
   if (element.classList.contains("text-box")) {
     const text = element.querySelector("textarea")?.value || "";
-    return `${indent}<span>${escapeHtml(text)}</span>`;
+    return `${indent}<span><pre>${escapeHtml(text)}</pre></span>`;
   }
 
   return "";
